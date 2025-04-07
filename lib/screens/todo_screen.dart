@@ -18,15 +18,13 @@ class _TodoScreenState extends State<TodoScreen> {
 
   User? get user => FirebaseAuth.instance.currentUser;
   String? editTodoId;
-  bool isCompleted = false;
 
   Future<void> addOrUpdate() async {
     if (controller.text.isEmpty) return;
 
     if (editTodoId == null) {
-      await fireStore
-          .collection('todos')
-          .add({'task': controller.text, 'user': user?.uid,});
+      await fireStore.collection('todos').add(
+          {'task': controller.text, 'user': user?.uid, 'completed': false});
       editTodoId = null;
     } else {
       await fireStore
@@ -54,15 +52,6 @@ class _TodoScreenState extends State<TodoScreen> {
       controller.clear();
     });
   }
-  void todoComplete(bool newValue) => setState(() {
-    isCompleted = newValue;
-
-    if (isCompleted) {
-      isCompleted = true;
-    } else {
-      isCompleted = false;
-    }
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +75,7 @@ class _TodoScreenState extends State<TodoScreen> {
                     controller: controller,
                     decoration: InputDecoration(
                       labelText:
-                      editTodoId == null ? 'Add new sask' : 'edit task',
+                          editTodoId == null ? 'Add new sask' : 'edit task',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -109,6 +98,7 @@ class _TodoScreenState extends State<TodoScreen> {
                     }
 
                     final todos = snapshot.data!.docs;
+
                     if (todos.isEmpty) {
                       return Center(child: Text('No Task'));
                     }
@@ -116,7 +106,17 @@ class _TodoScreenState extends State<TodoScreen> {
                       itemCount: todos.length,
                       itemBuilder: (context, index) {
                         final todo = todos[index];
+                        final isCompleted = todo['completed'] ?? false;
                         return ListTile(
+                          leading: Checkbox(
+                            value: isCompleted,
+                            onChanged: (value) {
+                              fireStore
+                                  .collection('todos')
+                                  .doc(todo.id)
+                                  .update({'completed': value});
+                            },
+                          ),
                           title: Text(todo['task']),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
