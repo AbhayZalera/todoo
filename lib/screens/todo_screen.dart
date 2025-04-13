@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../controller/auth_controller.dart';
+import '../notification_service.dart';
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
@@ -50,6 +51,14 @@ class _TodoScreenState extends State<TodoScreen> {
     setState(() {
       editTodoId = null;
       controller.clear();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero, () {
+      NotificationService().initNotification(context);
     });
   }
 
